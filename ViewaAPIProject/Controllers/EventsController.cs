@@ -31,9 +31,8 @@ namespace ViewaAPIProject.Controllers
         }
 
 
-        [HttpGet("{dateSearchParams}", Name = "Get")]
-        public async Task<ActionResult<IEnumerable<ViewaSample>>> GetEvents(DateSearchParams dateSearchParams)
-        ///public async Task<ActionResult<IEnumerable<ViewaSample>>> GetEvents(DateTime? startDate, DateTime? endDate)
+        [HttpGet("{dateSearchParams}", Name = "Search")]
+        public async Task<ActionResult<IEnumerable<ViewaSample>>> GetEvents(DateSearchParams dateSearchParams)        
         {
             var events = _context.ViewaSamples.AsQueryable();
 
