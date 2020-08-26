@@ -34,7 +34,7 @@ namespace ViewaAPIProject
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(
-                opts => opts.UseSqlServer(Configuration["ConnectionStrings:DefaultConnection"]));
+                opts => opts.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.ConfigureCors();
             services.AddControllers();

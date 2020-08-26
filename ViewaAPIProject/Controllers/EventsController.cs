@@ -24,15 +24,24 @@ namespace ViewaAPIProject.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ViewaSample>>> GetEvents(DateTime? startDate, DateTime? endDate)
+        public async Task<ActionResult<IEnumerable<ViewaSample>>> GetAll()
+        {
+            var events = _context.ViewaSamples.AsQueryable();
+            return await events.ToListAsync();
+        }
+
+
+        [HttpGet("{dateSearchParams}", Name = "Get")]
+        public async Task<ActionResult<IEnumerable<ViewaSample>>> GetEvents(DateSearchParams dateSearchParams)
+        ///public async Task<ActionResult<IEnumerable<ViewaSample>>> GetEvents(DateTime? startDate, DateTime? endDate)
         {
             var events = _context.ViewaSamples.AsQueryable();
 
-            if (startDate != null)
-                events = events.Where(x => x.EventDate >= startDate);
+            if (dateSearchParams.FromDate != null)
+                events = events.Where(x => x.EventDate >= dateSearchParams.FromDate);
 
-            if (endDate != null)
-                events = events.Where(x => x.EventDate <= endDate);
+            if (dateSearchParams.ToDate != null)
+                events = events.Where(x => x.EventDate <= dateSearchParams.ToDate);
 
             return await events.ToListAsync();
         }

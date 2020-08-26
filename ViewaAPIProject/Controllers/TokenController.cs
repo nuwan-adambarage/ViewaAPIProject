@@ -30,36 +30,37 @@ namespace ViewaAPIProject.Controllers
         [HttpPost]
         [Route("Login")]
         public async Task<IActionResult> Post(UserInformation userInfo)
-        {            
-            if (userInfo == null)
+        {
+            if (userInfo != null && userInfo.Email != null && userInfo.Password != null)
             {
-                return BadRequest("Invalid client request");
-            }
+                var user = await _context.UserInformations.FirstOrDefaultAsync(u => u.Email == userInfo.Email && u.Password == userInfo.Password);
 
-            var userInDb = await _context.UserInformations.FirstOrDefaultAsync(u => u.Email == userInfo.Email && u.Password == userInfo.Password);
+                if (user != null)
+                {
+                    var claims = new[] {
+                    new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+                    //new Claim("Id", userInfo.Id.ToString()),
+                    //new Claim("FirstName", userInfo.FirstName),
+                    //new Claim("LastName", userInfo.LastName),
+                    new Claim("Email", user.Email)
+                   };
 
-            if (userInDb == null)
-                return Unauthorized();
-
-            if (userInDb.Email == userInfo.Email && userInDb.Password == userInfo.Password)
-            {
-                var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345"));
-                var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-
-                var tokeOptions = new JwtSecurityToken(
-                    issuer: "http://localhost:44344",
-                    audience: "http://localhost:44344",
-                    claims: new List<Claim>(),
-                    expires: DateTime.Now.AddMinutes(5),
-                    signingCredentials: signinCredentials
-                );
-
-                var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
-                return Ok(new { Token = tokenString });
+                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                    var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                    var token = new JwtSecurityToken(_configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], claims, expires: DateTime.UtcNow.AddDays(1), signingCredentials: signIn);
+                    //var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+                    return Ok(new { Token = new JwtSecurityTokenHandler().WriteToken(token)});
+                }
+                else
+                {
+                    return BadRequest("Invalid credentials");
+                }
             }
             else
             {
-                return Unauthorized();
+                return BadRequest();
             }
         }
 
